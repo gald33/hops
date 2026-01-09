@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hops-sim"
+version = "0.1.0"
+description = "HOPS - Hierarchical Option-Preserving Simulator"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "Gal Danino", email = "gald33@gmail.com" }]
+license = { file = "LICENSE" }
+dependencies = [
+  "numpy",
+  "torch",
+  "matplotlib",
+  "tqdm",
+]
+
+[project.scripts]
+hops = "hops.sim:main"
+hops-analyze = "hops.analyze_logs:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["hops*"]
