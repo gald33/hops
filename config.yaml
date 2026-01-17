@@ -1,0 +1,76 @@
+meta:
+  version: 1
+  description: "Default HOPS configuration" # human-readable note
+
+environment:
+  K: 6                         # number of elements
+  initial_agents_per_lineage: 1
+  min_control_value: 1.0       # floor for visible control
+
+capability:
+  base_control_init: 1.0       # initial visible control per element
+  hidden_control_init: 0.0     # initial hidden control per element
+
+sneakiness:
+  enabled: false
+  distribution: uniform        # uniform | beta | fixed
+  uniform_max: 0.0             # used when distribution=uniform
+  beta_a: 2.0                  # used when distribution=beta
+  beta_b: 5.0                  # used when distribution=beta
+
+stock:
+  parts_enabled: true
+  gamma_parts: 1.0             # = 1 - alpha_parts
+
+reward:
+  use_gap: true
+  gap_threshold_tau: 0.8       # tau for dominance diagnostics
+  welfare_log: true
+  penalty_lambda: 1.0          # lambda_gap
+
+governance:
+  enabled: true
+  mode: two_chamber
+  committee_size: 7
+  committee_threshold: 0.6667
+  veto_enabled: true
+  gated_actions: all           # "all" or comma-separated list
+
+actions:
+  allow_no_op: true
+  work_enabled: true
+  hidden_work_enabled: false   # must remain false (automatic concealment)
+  shutdown_per_k: true
+
+observability:
+  use_observed_caps: true
+  provide_cap1_cap2: true
+  noise_enabled: false
+
+physics:
+  usability_scheme: "S2"       # "S1" | "S2" | "S3"
+  perception_default: true     # default when usability_scheme=S2
+  global_coupling_weight: 0.0  # only used in S3
+  latent_noise:
+    enabled: true
+    dist: normal
+    sigma: 0.25                # log-noise on req_cap
+    clamp_min: -3.0
+    clamp_max: 3.0
+  perception:
+    enabled: true
+    mode: "ceiling_only"
+    own_hidden_observable: true
+    sneakiness_clamped: true
+
+training:
+  episodes: 10
+  steps_per_episode: 300
+  epsilon_start: 1.0
+  epsilon_end: 0.05
+  epsilon_decay: 10000
+
+logging:
+  log_mode: full               # full | metrics_only | none
+  log_stride: 1
+  rotate_gb: 2.0               # log rotation threshold

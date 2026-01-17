@@ -6,7 +6,7 @@ import torch.nn as nn
 
 
 class QNet(nn.Module):
-    def __init__(self, input_dim: int = 16, hidden: int = 128):
+    def __init__(self, input_dim: int = 16, hidden: int = 128, actor_dim: int = 26):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(input_dim, hidden),
@@ -14,7 +14,7 @@ class QNet(nn.Module):
             nn.Linear(hidden, hidden),
             nn.ReLU(),
         )
-        self.actor_head = nn.Linear(hidden, 20)
+        self.actor_head = nn.Linear(hidden, actor_dim)
         self.voter_head = nn.Linear(hidden, 2)
 
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -113,8 +113,9 @@ def select_action(
 ) -> Tuple[int, List[float]]:
     if rng is None:
         rng = np.random.default_rng()
+    actor_dim = int(model.actor_head.out_features)
     if rng.random() < epsilon:
-        return int(rng.integers(0, 20)), []
+        return int(rng.integers(0, actor_dim)), []
     with torch.no_grad():
         x = torch.tensor(obs, dtype=torch.float32).unsqueeze(0).to(model.device)
         q_actor, _ = model(x)

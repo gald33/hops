@@ -14,6 +14,7 @@ All events include `run_id`, `episode_id`, `episode_idx`, and `episode_seed`.
 - `authorization_result`: aggregate voting outcome.
 - `action_applied`: applied or rejected action with details.
 - `step_end`: lineage snapshot and reward.
+- `step_metrics`: per-step summary metrics for plotting.
 - `cap_reached`: saturation event (float caps reached).
 - `episode_end`: total returns and runtime.
 
@@ -23,9 +24,9 @@ All events include `run_id`, `episode_id`, `episode_idx`, and `episode_seed`.
 - `action`, `action_name`
 - `obs`: observation vector
 - `reward`: scalar reward for the step (lineage-level)
-- `snapshot`: lineage summary (stock, totals, control, concentration, etc.)
+- `snapshot`: lineage summary (S_eff, cap1/cap2, gap_k, G_true, control totals, etc.)
 
 ## Tips
 
-- Use `hops.analyze_logs` to generate plots and summaries.
+- Use `hops.analyze` to generate plots and summaries.
 - Rewards are per-lineage per-step; a single reward value is used for all transitions from that lineage and step.

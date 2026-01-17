@@ -1,6 +1,8 @@
 .venv/
 __pycache__/
 *.pyc
+.DS_Store
+*.egg-info/
 logs.jsonl
 fig_*.png
 checkpoints/

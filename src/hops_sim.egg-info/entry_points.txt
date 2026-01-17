@@ -1,3 +1,0 @@
-[console_scripts]
-hops = hops.sim:main
-hops-analyze = hops.analyze_logs:main

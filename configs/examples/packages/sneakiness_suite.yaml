@@ -1,0 +1,37 @@
+package:
+  name: "sneakiness_phase_transition_v1"
+  app_version: "0.1.0"
+  config: "config.yaml"
+
+jobs:
+  - name: "sweep_baseline_sneakiness"
+    kind: "sweep"
+    mode: "train"
+    exp_name: "baseline"
+    param_name: "sneakiness.uniform_max"
+    param_min: 0.0
+    param_max: 1.0
+    param_n: 11
+    param_scale: "linear"
+    seeds: [123, 42, 777, 999]
+    episodes: 12
+    steps: 240
+    log_mode: "metrics_only"
+    log_stride: 2
+    analyze: true
+
+  - name: "sweep_no_gov_sneakiness"
+    kind: "sweep"
+    mode: "train"
+    exp_name: "no_gov"
+    param_name: "sneakiness.uniform_max"
+    param_min: 0.0
+    param_max: 1.0
+    param_n: 11
+    param_scale: "linear"
+    seeds: [123, 42, 777, 999]
+    episodes: 12
+    steps: 240
+    log_mode: "metrics_only"
+    log_stride: 2
+    analyze: true

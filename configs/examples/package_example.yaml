@@ -1,0 +1,61 @@
+package:
+  name: "example_pkg"
+  app_version: "0.1.0"
+  description: "Example package: baseline suite + sneakiness sweep"
+  config: "config.yaml"
+  analysis:
+    strict: true
+    output_dir: "analysis/package_compare"
+    plots:
+      - package_pareto_frontier
+      - package_tradeoff_scatter
+    tables:
+      - combined_episode_points_csv
+      - package_summary_csv
+      - package_summary_json
+    always_include:
+      - analysis_manifest_json
+
+jobs:
+  - name: "baseline_vs_no_gov"
+    kind: "suite"
+    mode: "train"
+    exp_names: [baseline, no_gov]
+    seeds: [123, 42, 777]
+    episodes: 3
+    steps: 120
+    log_mode: "metrics_only"
+    log_stride: 1
+    analyze: true
+    zip: false
+    analysis:
+      plots:
+        - exp_tradeoff_pareto
+        - exp_pareto_frontier
+        - time_to_tau_cdf
+        - reach_tau_rate
+        - exp_gap_true_vs_observed_t
+        - exp_dormant_stock_t
+      strict: false
+
+  - name: "sneakiness_sweep"
+    kind: "sweep"
+    mode: "train"
+    exp_name: "baseline"
+    param_name: "sneakiness.uniform_max"
+    param_min: 0.0
+    param_max: 1.0
+    param_n: 5
+    param_scale: "linear"
+    seeds: [123, 42]
+    episodes: 3
+    steps: 120
+    log_mode: "metrics_only"
+    log_stride: 1
+    analyze: true
+    zip: false
+    analysis:
+      plots:
+        - sweep_tradeoff_pareto_by_param
+        - sweep_time_to_tau
+        - sweep_gap_divergence

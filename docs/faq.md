@@ -1,7 +1,7 @@
 # FAQ
 
 ## Why are rewards NaN or huge?
-Rewards depend on the stock rate delta and a concentration term. If stock or control saturates to large values, rewards can blow up. The simulator caps values at `MAX_FLOAT` but you can still see extreme magnitudes in logs.
+Rewards depend on `delta_S_eff`, a gap-based danger penalty (`G_true`), and a `log(1 + S_eff_pre)` factor. If effective stock or control saturates to large values, rewards can blow up. The simulator caps values at `MAX_FLOAT` but you can still see extreme magnitudes in logs.
 
 ## Why is RELEASE failing?
 RELEASE fails if there is no active project or the acting agent is not the project parent tier. It can also be blocked by `--release_gate_ratio`.

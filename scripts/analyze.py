@@ -6,7 +6,7 @@ src_path = os.path.join(ROOT, "src")
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
 
-from hops.analyze_logs import main
+from hops.analyze import main
 
 
 if __name__ == "__main__":

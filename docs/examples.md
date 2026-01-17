@@ -37,5 +37,5 @@ python -m hops.sim --release_gate_ratio 0.3 --steps 50 --episodes 2
 ## Analyze logs
 
 ```bash
-python -m hops.analyze_logs --logs runs/logs.jsonl --window 10
+python -m hops.analyze --logs runs/logs.jsonl --window 10
 ```

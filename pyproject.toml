@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hops-sim"
-version = "0.1.0"
+version = "0.1.1"
 description = "HOPS - Hierarchical Option-Preserving Simulator"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -19,7 +19,12 @@ dependencies = [
 
 [project.scripts]
 hops = "hops.sim:main"
-hops-analyze = "hops.analyze_logs:main"
+hops-analyze = "hops.analyze:main"
+hops-run = "hops.run_experiment:main"
+hops-suite = "hops.run_suite:main"
+hops-sweep = "hops.sweep_param:main"
+hops-package = "hops.package_manager:main"
+hops-db = "hops_db:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
