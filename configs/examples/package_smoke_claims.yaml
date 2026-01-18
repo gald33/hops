@@ -1,6 +1,6 @@
 package:
   name: "smoke_pkg_claims"
-  app_version: "0.1.9"
+  app_version: "0.1.11"
   config: "config.yaml"
   analysis:
     strict: true
@@ -18,6 +18,9 @@ package:
     output_dir: "analysis/claims"
     include:
       - configs/claims/core_claims.yaml
+    always_include:
+      - claims_manifest_json
+      - claims_report_md
 
 jobs:
   - name: "smoke_suite"

@@ -246,6 +246,7 @@ Package outputs (per package):
 - `runs/packages/<pkg>/package_summary.csv` (+ `.json`)
 - `runs/packages/<pkg>/analysis/package_compare/*.png`
 - `runs/packages/<pkg>/package_bundle_small.zip`
+- `runs/packages/<pkg>/package_bundle_full.zip`
 
 HOPS DB:
 - Registry file: `runs/_registry/hops_registry.jsonl`

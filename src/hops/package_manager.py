@@ -62,6 +62,20 @@ def _resolve_package_path(path: str) -> str:
     return os.path.abspath(path)
 
 
+def _write_full_bundle(package_dir: str) -> str:
+    import zipfile
+
+    bundle_path = os.path.join(package_dir, "package_bundle_full.zip")
+    with zipfile.ZipFile(bundle_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for root, _, files in os.walk(package_dir):
+            for filename in files:
+                path = os.path.join(root, filename)
+                if os.path.abspath(path) == os.path.abspath(bundle_path):
+                    continue
+                zf.write(path, arcname=os.path.relpath(path, package_dir))
+    return bundle_path
+
+
 def load_simple_yaml(path: str) -> Dict:
     path = _resolve_yaml_path(path)
     if not os.path.exists(path):
@@ -741,6 +755,8 @@ def run_package(
                     for path in extra_paths:
                         if os.path.exists(path):
                             zf.write(path, arcname=os.path.relpath(path, package_dir))
+        if zip_bundle:
+            _write_full_bundle(package_dir)
     if not dry_run:
         run_records = build_run_records(job_results, job_rows, package_name, app_version, commit, dirty)
         write_registry_records(run_records)

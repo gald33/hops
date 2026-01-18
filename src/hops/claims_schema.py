@@ -8,7 +8,16 @@ except Exception:  # pragma: no cover
     yaml = None
 
 
-ALLOWED_TOP_KEYS = {"version", "defaults", "claims", "include", "strict", "fail_on", "output_dir"}
+ALLOWED_TOP_KEYS = {
+    "version",
+    "defaults",
+    "claims",
+    "include",
+    "strict",
+    "fail_on",
+    "output_dir",
+    "always_include",
+}
 ALLOWED_DEFAULTS_KEYS = {
     "scope",
     "rng_seed",
@@ -233,6 +242,7 @@ def _normalize_claims(claims: List[Dict]) -> List[Dict]:
 def _merge_includes(block: Dict, base_dir: str, seen: Optional[Set[str]] = None) -> Dict:
     merged_defaults: Dict = {}
     merged_claims: List[Dict] = []
+    merged_always: List[str] = []
     seen = seen or set()
     includes = block.get("include", []) or []
     if isinstance(includes, str):
@@ -269,15 +279,22 @@ def _merge_includes(block: Dict, base_dir: str, seen: Optional[Set[str]] = None)
         if not isinstance(inc_claims, list):
             raise ClaimsSchemaError(f"claims in {path} must be a list")
         merged_claims.extend(inc_claims)
+        inc_always = inc_cfg.get("always_include", []) or []
+        if isinstance(inc_always, str):
+            inc_always = [inc_always]
+        if not isinstance(inc_always, list):
+            raise ClaimsSchemaError(f"always_include in {path} must be a list")
+        merged_always.extend(str(item) for item in inc_always)
         nested = _merge_includes(inc_cfg, os.path.dirname(path), seen)
         merged_defaults = _deep_merge(merged_defaults, nested.get("defaults", {}))
         merged_claims.extend(nested.get("claims", []))
-    return {"defaults": merged_defaults, "claims": merged_claims}
+        merged_always.extend(nested.get("always_include", []))
+    return {"defaults": merged_defaults, "claims": merged_claims, "always_include": merged_always}
 
 
 def load_claims_block(block: Optional[Dict], base_dir: str) -> Dict:
     if not block:
-        return {"defaults": {}, "claims": []}
+        return {"defaults": {}, "claims": [], "always_include": []}
     if not isinstance(block, dict):
         raise ClaimsSchemaError("claims block must be a mapping")
     _validate_keys(block, ALLOWED_TOP_KEYS, "claims block")
@@ -289,6 +306,13 @@ def load_claims_block(block: Optional[Dict], base_dir: str) -> Dict:
     defaults = _deep_merge(defaults, block.get("defaults", {}) or {})
     claims = merged.get("claims", [])
     claims.extend(block.get("claims", []) or [])
+    always_include = merged.get("always_include", [])
+    block_always = block.get("always_include", []) or []
+    if isinstance(block_always, str):
+        block_always = [block_always]
+    if not isinstance(block_always, list):
+        raise ClaimsSchemaError("always_include must be a list")
+    always_include = list(dict.fromkeys([str(item) for item in always_include + block_always]))
     claims = _normalize_claims(claims)
     deduped: List[Dict] = []
     seen_ids: Set[str] = set()
@@ -306,4 +330,5 @@ def load_claims_block(block: Optional[Dict], base_dir: str) -> Dict:
         "strict": bool(block.get("strict", False)),
         "fail_on": block.get("fail_on"),
         "output_dir": block.get("output_dir"),
+        "always_include": always_include,
     }
