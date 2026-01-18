@@ -23,7 +23,51 @@ from hops.registry import (
 from hops.analysis_contract import PLOT_REGISTRY, resolve_plot_id
 
 
+def _find_repo_root(start: str) -> Optional[str]:
+    current = os.path.abspath(start)
+    while True:
+        if os.path.exists(os.path.join(current, "pyproject.toml")) or os.path.exists(
+            os.path.join(current, ".git")
+        ):
+            return current
+        parent = os.path.dirname(current)
+        if parent == current:
+            return None
+        current = parent
+
+
+def _resolve_yaml_path(path: str) -> str:
+    if os.path.isabs(path):
+        return path
+    if os.path.exists(path):
+        return os.path.abspath(path)
+    repo_root = _find_repo_root(os.path.dirname(__file__))
+    if repo_root:
+        candidate = os.path.join(repo_root, path)
+        if os.path.exists(candidate):
+            return candidate
+    return path
+
+
+def _resolve_package_path(path: str) -> str:
+    if os.path.isabs(path):
+        return path
+    if os.path.exists(path):
+        return os.path.abspath(path)
+    repo_root = _find_repo_root(os.path.dirname(__file__))
+    if repo_root:
+        candidate = os.path.join(repo_root, path)
+        if os.path.exists(candidate):
+            return candidate
+    return os.path.abspath(path)
+
+
 def load_simple_yaml(path: str) -> Dict:
+    path = _resolve_yaml_path(path)
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"YAML file not found: {path} (run from repo root or use an absolute path)"
+        )
     try:
         import yaml  # type: ignore
 
@@ -403,7 +447,10 @@ def run_package(
     evaluate_claims_flag: bool = False,
     no_claims: bool = False,
 ) -> int:
-    package_path = os.path.abspath(package_path)
+    package_path = _resolve_package_path(package_path)
+    repo_root = _find_repo_root(os.path.dirname(__file__)) or os.getcwd()
+    if repo_root and os.path.isdir(repo_root):
+        os.chdir(repo_root)
     base_dir = os.path.dirname(package_path)
     pkg_cfg = parse_package_config(package_path)
     package_meta = pkg_cfg.get("package", {})
@@ -420,11 +467,10 @@ def run_package(
     jobs = pkg_cfg.get("jobs", [])
     if not jobs:
         raise SystemExit("package config has no jobs")
-    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     commit, dirty = git_info(repo_root)
     if dirty and not allow_dirty:
         raise SystemExit("git worktree is dirty; re-run with --allow_dirty to proceed")
-    package_dir = os.path.join("runs", "packages", package_name)
+    package_dir = os.path.join(repo_root, "runs", "packages", package_name)
     os.makedirs(package_dir, exist_ok=True)
     manifest_path = os.path.join(package_dir, "package_manifest.json")
     package_started = utc_now_iso()
@@ -632,7 +678,7 @@ def run_package(
             summary = errors[0] if errors else {"reason": "unknown"}
             raise SystemExit(2)
         if job_rows:
-            parquet_path = os.path.join("runs", "_registry", "episode_points.parquet")
+            parquet_path = os.path.join(repo_root, "runs", "_registry", "episode_points.parquet")
             warn = update_parquet_registry(job_rows, parquet_path)
             if warn:
                 manifest.setdefault("warnings", []).append(warn)
