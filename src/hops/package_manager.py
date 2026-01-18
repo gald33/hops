@@ -400,6 +400,8 @@ def run_package(
     dry_run: bool,
     allow_dirty: bool,
     contract_mode: Optional[str] = None,
+    evaluate_claims_flag: bool = False,
+    no_claims: bool = False,
 ) -> int:
     package_path = os.path.abspath(package_path)
     base_dir = os.path.dirname(package_path)
@@ -408,6 +410,7 @@ def run_package(
     package_name = package_meta.get("name") or pkg_cfg.get("package_name")
     app_version = package_meta.get("app_version") or pkg_cfg.get("app_version")
     analysis_defaults = package_meta.get("analysis", {})
+    claims_defaults = package_meta.get("claims", {})
     if contract_mode is None:
         contract_mode = "contract" if analysis_defaults else "legacy"
     if not package_name:
@@ -635,6 +638,49 @@ def run_package(
                 manifest.setdefault("warnings", []).append(warn)
                 with open(manifest_path, "w", encoding="utf-8") as f:
                     json.dump(manifest, f, indent=2, sort_keys=True)
+        claims_manifest = None
+        should_run_claims = (bool(claims_defaults) or evaluate_claims_flag) and not no_claims
+        if should_run_claims:
+            from hops.claims_eval import evaluate_claims
+            from hops.claims_schema import ClaimsSchemaError, load_claims_block
+
+            claims_config = load_claims_block(claims_defaults, base_dir)
+            job_claims: List[Dict] = []
+            for job in jobs:
+                job_claims_block = job.get("claims")
+                if not job_claims_block:
+                    continue
+                job_cfg = load_claims_block(job_claims_block, base_dir)
+                for claim in job_cfg.get("claims", []):
+                    if claim.get("scope") and claim.get("scope") != job.get("kind"):
+                        raise SystemExit(
+                            f"job {job.get('name')} claim {claim.get('id')} scope must match job kind {job.get('kind')}"
+                        )
+                    data_block = claim.get("data", {}) or {}
+                    data_block.setdefault("job_name", job.get("name"))
+                    claim["data"] = data_block
+                    job_claims.append(claim)
+            claims_config["claims"].extend(job_claims)
+            try:
+                claims_manifest = evaluate_claims(
+                    package_dir=package_dir,
+                    package_name=package_name,
+                    app_version=app_version,
+                    config_hash=package_config_hash,
+                    git_commit=commit or "",
+                    is_dirty=dirty,
+                    claims_config=claims_config,
+                    job_results=[job.__dict__ for job in job_results],
+                )
+            except ClaimsSchemaError as exc:
+                raise SystemExit(str(exc))
+            manifest["claims_outputs"] = {
+                "output_dir": claims_manifest.get("output_dir") if claims_manifest else None
+            }
+            with open(manifest_path, "w", encoding="utf-8") as f:
+                json.dump(manifest, f, indent=2, sort_keys=True)
+            if claims_manifest and claims_manifest.get("exit_status"):
+                raise SystemExit(2)
     if not dry_run:
         run_records = build_run_records(job_results, job_rows, package_name, app_version, commit, dirty)
         write_registry_records(run_records)
@@ -806,7 +852,10 @@ def main() -> None:
     parser.add_argument("--allow_dirty", action="store_true")
     parser.add_argument("--list_plots", action="store_true")
     parser.add_argument("--list_tables", action="store_true")
+    parser.add_argument("--list_claims", action="store_true")
     parser.add_argument("--contract_mode", choices=["legacy", "contract"])
+    parser.add_argument("--evaluate_claims", action="store_true")
+    parser.add_argument("--no_claims", action="store_true")
     args = parser.parse_args()
     if args.list_plots:
         from hops.analysis_contract import describe_plot_registry
@@ -828,8 +877,16 @@ def main() -> None:
                 f"{table_id} | {entry.get('filename','')} | {entry.get('scopes','')} | {entry.get('description','')}"
             )
         return
+    if args.list_claims:
+        from hops.claims_contract import describe_claim_registry
+
+        info = describe_claim_registry()
+        print("claim_id | scopes | description")
+        for claim_id, entry in info.items():
+            print(f"{claim_id} | {entry.get('scopes','')} | {entry.get('description','')}")
+        return
     if not args.package:
-        raise SystemExit("--package is required unless --list_plots is used")
+        raise SystemExit("--package is required unless a --list_* flag is used")
     raise SystemExit(
         run_package(
             package_path=args.package,
@@ -838,5 +895,7 @@ def main() -> None:
             dry_run=args.dry_run,
             allow_dirty=args.allow_dirty,
             contract_mode=args.contract_mode,
+            evaluate_claims_flag=args.evaluate_claims,
+            no_claims=args.no_claims,
         )
     )

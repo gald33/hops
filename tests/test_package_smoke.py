@@ -173,6 +173,17 @@ class TestPackageSmoke(unittest.TestCase):
         )
         self.assertTrue(result.stdout.strip())
 
+        cmd = ["hops-package", "--list_claims"]
+        if shutil.which("hops-package") is None:
+            cmd = [sys.executable, os.path.join("scripts", "run_package.py"), "--list_claims"]
+        result = subprocess.run(cmd, cwd=REPO_ROOT, capture_output=True, text=True)
+        self.assertEqual(
+            result.returncode,
+            0,
+            msg=f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}",
+        )
+        self.assertTrue(result.stdout.strip())
+
     def test_readme_smoke_command(self):
         cmd = [
             "hops-package",

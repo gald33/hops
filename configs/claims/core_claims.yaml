@@ -1,0 +1,40 @@
+version: 1
+
+defaults:
+  rng_seed: 7
+  n_boot: 200
+  ci: 0.9
+  handle_censoring: separate
+  data:
+    source: combined_episode_points
+    unit: episode
+  evidence:
+    tables:
+      - combined_episode_points_csv
+      - package_summary_csv
+    plots: []
+
+claims:
+  - id: C001_risk_bounded
+    scope: package
+    description: "Episode risk stays within [0,1]."
+    target:
+      kind: single
+    metrics:
+      - name: max_gap_true_ratio
+        agg: max
+        op: "<="
+        value: 1.0
+
+  - id: C002_time_to_tau_defined
+    scope: package
+    description: "Time-to-tau is reported when reached."
+    target:
+      kind: single
+    data:
+      filter: "reached_tau == true"
+    metrics:
+      - name: time_to_tau
+        agg: median
+        op: ">="
+        value: 0.0

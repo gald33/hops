@@ -125,15 +125,30 @@ List available analysis table ids:
 hops-package --list_tables
 ```
 
-Each list prints `id | filename | scopes | description`.
+List available claim ids:
+
+```bash
+hops-package --list_claims
+```
+
+Plot/table lists print `id | filename | scopes | description`. Claim lists print `id | scopes | description`.
 
 Strict analysis is controlled in the package YAML (package.analysis.strict) and can be combined with
 `--contract_mode contract` if you want to force contract gating on a legacy config.
+Claims run automatically when `package.claims` is present; use `--no_claims` to skip or
+`--evaluate_claims` to force evaluation on a legacy package config.
 
 Run a package with strict analysis (explicit in YAML):
 
 ```bash
 hops-package --package configs/examples/package_smoke.yaml \
+  --allow_dirty
+```
+
+Run a package with claims evaluation:
+
+```bash
+hops-package --package configs/examples/package_smoke_claims.yaml \
   --allow_dirty
 ```
 
@@ -174,6 +189,10 @@ package:
       metric: final_W_true
       aggregation: mean_over_lineages
     always_include: [analysis_manifest_json]
+  claims:
+    strict: false
+    output_dir: "analysis/claims"
+    include: ["configs/claims/core_claims.yaml"]
 
 jobs:
   - name: "baseline_vs_no_gov"
@@ -208,6 +227,10 @@ jobs:
     analysis:
       plots: [sweep_tradeoff_pareto_by_param, sweep_time_to_tau, sweep_gap_divergence]
 ```
+
+Claims outputs (per package):
+- `runs/packages/<pkg>/analysis/claims/claims_manifest.json`
+- `runs/packages/<pkg>/analysis/claims/claims_report.md`
 
 Scope rules for plot ids:
 - `package.analysis.plots` may only request plot ids with scope `package_compare`.
