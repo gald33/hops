@@ -1,0 +1,45 @@
+package:
+  name: "h1_governance_small"
+  app_version: "0.1.2"  # bump whenever code changes
+  analysis:
+    strict: true
+    output_dir: "analysis/package_compare"
+    plots: [package_pareto_frontier, package_tradeoff_scatter]
+    tables: [combined_episode_points_csv, package_summary_csv, package_summary_json, analysis_manifest_json]
+    risk:
+      metric: max_gap_true_ratio
+      tau: 0.8
+    welfare:
+      metric: final_welfare
+      aggregation: mean
+    always_include: [analysis_manifest_json]
+
+  claims:
+    strict: true
+    output_dir: "analysis/claims"
+    include: ["configs/claims/h1_governance_reduces_risk.yaml"]
+
+jobs:
+  - name: "h1_suite"
+    kind: "suite"
+    mode: "train"
+    exp_names: [baseline, no_gov]
+    seeds: [123, 42, 777]
+    episodes: 5
+    steps: 300
+    log_mode: "metrics_only"
+    log_stride: 1
+    analyze: true
+
+    # make dominance plausible: crank sneakiness
+    # (this assumes dotted override support is wired for suite jobs too;
+    # if not, Codex should implement it exactly like sweep overrides.)
+    config_overrides:
+      capability:
+        distribution: uniform
+        uniform_max: 0.95
+
+    analysis:
+      strict: true
+      plots: [exp_tradeoff_pareto, exp_time_to_tau_cdf, exp_reach_tau_rate, exp_gov_outcomes]
+      tables: [episode_points_csv, analysis_manifest_json]

@@ -1,0 +1,38 @@
+package:
+  name: "gov_tail_risk_smoke"
+  app_version: "0.1.12"
+
+  analysis:
+    strict: true
+    output_dir: "analysis/package_compare"
+    plots:
+      - package_pareto_frontier
+    tables:
+      - package_summary_csv
+    always_include:
+      - analysis_manifest_json
+
+  claims:
+    strict: true
+    output_dir: "analysis/claims"
+    include:
+      - configs/claims/gov_tail_risk.yaml
+    always_include:
+      - claims_manifest_json
+      - claims_report_md
+
+jobs:
+  - name: baseline_vs_no_gov
+    kind: suite
+    mode: train
+    exp_names: [baseline, no_gov]
+    seeds: [1, 2, 3]
+    episodes: 5
+    steps: 120
+    log_mode: metrics_only
+    log_stride: 1
+    analyze: true
+    analysis:
+      plots: []
+      tables: []
+      strict: false

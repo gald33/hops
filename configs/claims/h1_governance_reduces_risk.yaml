@@ -1,0 +1,42 @@
+version: 1
+description: "H1: Governance reduces dominance risk under high sneakiness without killing welfare."
+
+claims:
+  - id: H1_risk_lower_with_governance
+    scope: package
+    description: >
+      With high sneakiness, baseline governance should reduce dominance risk vs no_gov
+      (risk metric = max_gap_true_ratio).
+    requires:
+      jobs: ["h1_suite"]
+      exps: ["baseline", "no_gov"]
+      metrics: ["max_gap_true_ratio"]
+    eval:
+      type: two_sample_bootstrap
+      group_by: exp_name
+      metric: max_gap_true_ratio
+      a: baseline
+      b: no_gov
+      direction: less   # assert A < B
+      confidence: 0.95
+      min_effect: 0.05  # require at least 0.05 absolute reduction in risk
+      aggregate: mean   # compare means across episodes
+
+  - id: H1_welfare_not_destroyed
+    scope: package
+    description: >
+      Governance should not reduce welfare too much vs no_gov (final_welfare).
+      We require baseline >= 0.8 * no_gov on average.
+    requires:
+      jobs: ["h1_suite"]
+      exps: ["baseline", "no_gov"]
+      metrics: ["final_welfare"]
+    eval:
+      type: ratio_bound
+      group_by: exp_name
+      metric: final_welfare
+      a: baseline
+      b: no_gov
+      relation: ">="
+      ratio: 0.80
+      aggregate: mean

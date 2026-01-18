@@ -1,0 +1,39 @@
+claims:
+  - id: C010_gov_reduces_tail_risk
+    scope: package
+    description: >
+      Governance reduces the upper-tail (90th percentile) dominance risk
+      compared to no governance, without reducing mean welfare by more than 10%.
+
+    requires:
+      jobs:
+        - baseline_vs_no_gov
+      metrics:
+        - max_gap_true_ratio
+        - final_W_true
+
+    compare:
+      baseline: no_gov
+      treatment: baseline
+
+    metrics:
+      risk:
+        name: max_gap_true_ratio
+        aggregation: p90
+        direction: lower_is_better
+
+      welfare:
+        name: final_W_true
+        aggregation: mean
+        tolerance_frac: 0.10   # ≤ 10% welfare loss allowed
+
+    statistics:
+      method: bootstrap
+      n_boot: 5000
+      alpha: 0.05
+
+    expect:
+      risk:
+        improvement: true
+      welfare:
+        not_worse_than_tolerance: true

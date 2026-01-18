@@ -523,8 +523,12 @@ def build_analysis_manifest(
         job_kind = job.get("job_kind", "")
         job_root = job.get("job_root", "")
         job_analysis = job.get("analysis", {})
-        job_plots = job_analysis.get("plots", requested_plots)
-        job_tables = job_analysis.get("tables", requested_tables)
+        job_plots = job_analysis.get("plots")
+        if job_plots is None:
+            job_plots = []
+        job_tables = job_analysis.get("tables")
+        if job_tables is None:
+            job_tables = []
         job_strict = bool(job_analysis.get("strict", strict))
         produced = {"plots": [], "tables": []}
         missing = []
