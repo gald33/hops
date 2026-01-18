@@ -335,7 +335,12 @@ def write_package_outputs(
         bundle_path = os.path.join(package_dir, "package_bundle_small.zip")
         with zipfile.ZipFile(bundle_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
             manifest_path = os.path.join(package_dir, "package_manifest.json")
-            for path in [combined_path, summary_path, summary_json_path, manifest_path]:
+            for path in [
+                combined_path,
+                summary_path,
+                summary_json_path,
+                manifest_path,
+            ]:
                 if os.path.exists(path):
                     zf.write(path, arcname=os.path.relpath(path, package_dir))
             for plot_id in [

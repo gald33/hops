@@ -727,6 +727,20 @@ def run_package(
                 json.dump(manifest, f, indent=2, sort_keys=True)
             if claims_manifest and claims_manifest.get("exit_status"):
                 raise SystemExit(2)
+        if zip_bundle:
+            bundle_path = os.path.join(package_dir, "package_bundle_small.zip")
+            if os.path.exists(bundle_path):
+                import zipfile
+
+                extra_paths = [
+                    os.path.join(package_dir, "analysis", "analysis_manifest.json"),
+                    os.path.join(package_dir, "analysis", "claims", "claims_manifest.json"),
+                    os.path.join(package_dir, "analysis", "claims", "claims_report.md"),
+                ]
+                with zipfile.ZipFile(bundle_path, "a", compression=zipfile.ZIP_DEFLATED) as zf:
+                    for path in extra_paths:
+                        if os.path.exists(path):
+                            zf.write(path, arcname=os.path.relpath(path, package_dir))
     if not dry_run:
         run_records = build_run_records(job_results, job_rows, package_name, app_version, commit, dirty)
         write_registry_records(run_records)
